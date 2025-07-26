@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tahiti | An Exploration [SECURE]</title>
+    
+    <!-- Leaflet CSS with Subresource Integrity (SRI) - MITIGATION FOR B-001 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous"/>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* [NO CHANGE TO CORE DESIGN] */
+        :root {
+            --deep-lagoon: #0a192f;
+            --sunlit-shallows: #64ffda;
+            --pearl: #ccd6f6;
+            --pearl-muted: #8892b0;
+            --volcanic-glass: rgba(25, 45, 65, 0.7);
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        html { box-sizing: border-box; font-size: 16px; }
+        *, *:before, *:after { box-sizing: inherit; }
+        body { margin: 0; padding: 0; background-color: var(--deep-lagoon); font-family: var(--font-sans); color: var(--pearl); overflow: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; background: linear-gradient(-45deg, #0a192f, #0f2140, #0a192f, #112a4a); background-size: 400% 400%; animation: gradient-flow 15s ease-in-out infinite; }
+        @keyframes gradient-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .leaflet-tile-pane { filter: brightness(0.8) contrast(1.2) saturate(0.8); }
+        .leaflet-control-zoom { display: none; }
+        .leaflet-marker-icon.custom-marker { border-radius: 50%; background-color: rgba(100, 255, 218, 0.8); border: 2px solid var(--sunlit-shallows); box-shadow: 0 0 15px var(--sunlit-shallows); transition: transform 0.3s ease-in-out; }
+        .leaflet-marker-icon.custom-marker::before { content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border-radius: 50%; background-color: var(--sunlit-shallows); animation: pulse 2s infinite; z-index: -1; transform-origin: center; }
+        .leaflet-marker-icon.custom-marker.active { transform: scale(1.5); box-shadow: 0 0 25px var(--sunlit-shallows), 0 0 35px var(--sunlit-shallows); }
+        @keyframes pulse { 0% { transform: scale(0.9); opacity: 0.7; } 70% { transform: scale(2.5); opacity: 0; } 100% { transform: scale(0.9); opacity: 0; } }
+        .ui-container { position: absolute; z-index: 10; padding: 1.5rem; pointer-events: none; }
+        .ui-container > * { pointer-events: auto; }
+        #header { top: 0; left: 0; width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        #header h1 { font-size: 1.75rem; font-weight: 500; color: var(--pearl); margin: 0; letter-spacing: 0.5px; }
+        #island-selector { display: flex; gap: 1.5rem; }
+        .island-btn { background: none; border: none; color: var(--pearl-muted); font-family: var(--font-sans); font-size: 1rem; cursor: pointer; transition: color 0.3s ease, transform 0.3s ease; position: relative; padding: 0.5rem 0; }
+        .island-btn::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background-color: var(--sunlit-shallows); transform: scaleX(0); transform-origin: right; transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1); }
+        .island-btn:hover, .island-btn.active { color: var(--sunlit-shallows); transform: translateY(-2px); }
+        .island-btn.active::after { transform: scaleX(1); transform-origin: left; }
+        #attraction-dock-wrapper { bottom: 0; left: 0; width: 100%; }
+        #attraction-dock { display: flex; gap: 1rem; overflow-x: auto; padding: 1.5rem; padding-top: 1rem; -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; /* For keyboard nav */ }
+        #attraction-dock::-webkit-scrollbar { display: none; }
+        /* MITIGATION FOR B-004: Styling a <button> instead of a <div> */
+        .attraction-card { flex: 0 0 320px; padding: 1.5rem; background: var(--volcanic-glass); border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 12px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform 0.4s ease, box-shadow 0.4s ease; cursor: pointer; text-align: left; font-family: var(--font-sans); }
+        .attraction-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px -15px rgba(0,0,0,0.7); }
+        .attraction-card.active, .attraction-card:focus-visible { transform: translateY(-10px) scale(1.05); box-shadow: 0 0 20px -5px var(--sunlit-shallows); border-color: var(--sunlit-shallows); outline: none; }
+        .attraction-card h3 { margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 500; color: var(--pearl); pointer-events: none; /* Allow click on child */ }
+        .attraction-card p { margin: 0; font-size: 0.95rem; color: var(--pearl-muted); line-height: 1.5; pointer-events: none; /* Allow click on child */ }
+        #welcome-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--deep-lagoon); z-index: 1000; display: flex; justify-content: center; align-items: center; transition: opacity 1.5s ease-in-out 1s; }
+        #welcome-overlay.hidden { opacity: 0; pointer-events: none; }
+        .typewriter h1 { font-size: 3rem; font-weight: 300; color: var(--pearl); overflow: hidden; border-right: .15em solid var(--sunlit-shallows); white-space: nowrap; margin: 0 auto; letter-spacing: .1em; animation: typing 2.5s steps(30, end), blink-caret .75s step-end infinite; }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--sunlit-shallows); } }
+        @media (max-width: 768px) { #header { flex-direction: column; align-items: flex-start; gap: 1rem; } #header h1 { font-size: 1.5rem; } .island-btn { font-size: 0.9rem; } #island-selector { gap: 1rem; } .attraction-card { flex-basis: 280px; } .typewriter h1 { font-size: 1.8rem; } }
+    </style>
+</head>
+<body>
+
+    <div id="welcome-overlay">
+        <div class="typewriter"><h1>Discover Tahiti.</h1></div>
+    </div>
+
+    <div id="map"></div>
+
+    <header id="header" class="ui-container">
+        <h1>An Exploration</h1>
+        <nav id="island-selector"></nav>
+    </header>
+
+    <div id="attraction-dock-wrapper" class="ui-container">
+        <div id="attraction-dock" tabindex="0"></div>
+    </div>
+
+    <!-- Leaflet JS with SRI - MITIGATION FOR B-001 -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    
+    <script>
+        // MITIGATION FOR B-003: Encapsulate all code in an IIFE to prevent global scope pollution
+        (function() {
+            'use strict'; // Enforce stricter parsing and error handling
+
+            const islands = {
+                tahiti: { name: 'Tahiti', coords: [-17.6509, -149.4260], zoom: 10 },
+                moorea: { name: 'Moorea', coords: [-17.5369, -149.8292], zoom: 11 },
+                boraBora: { name: 'Bora Bora', coords: [-16.5004, -151.7415], zoom: 12 },
+            };
+            const attractions = [
+                { id: 1, island: 'tahiti', name: 'Papeete Market', coords: [-17.5388, -149.5693], description: "A vibrant hub of local life, crafts, and flavors. The heart of Papeete." },
+                { id: 2, island: 'tahiti', name: 'Fautaua Waterfall', coords: [-17.5786, -149.5256], description: "A majestic cascade nestled in a lush valley, accessible by a rewarding hike." },
+                { id: 3, island: 'tahiti', name: 'Point Venus', coords: [-17.4950, -149.4960], description: "A historic black sand beach and lighthouse, where Captain Cook observed the transit of Venus." },
+                { id: 4, island: 'moorea', name: 'Belvédère Lookout', coords: [-17.5406, -149.8202], description: "Offers a breathtaking panoramic view of Ōpūnohu Bay and Cook's Bay." },
+                { id: 5, island: 'moorea', name: 'Magic Mountain', coords: [-17.5117, -149.8660], description: "An iconic peak with an unparalleled 360-degree view of the island and lagoon." },
+                { id: 6, island: 'moorea', name: 'Lagoonarium', coords: [-17.4878, -149.7618], description: "An opportunity to swim with sharks, rays, and a kaleidoscope of tropical fish." },
+                { id: 7, island: 'boraBora', name: 'Mount Otemanu', coords: [-16.5052, -151.7335], description: "The breathtaking, jungle-covered remnant of an ancient volcano, the soul of Bora Bora." },
+                { id: 8, island: 'boraBora', name: 'Matira Beach', coords: [-16.5365, -151.7317], description: "Often cited as one of the most beautiful beaches in the world, with powder-soft white sand." },
+                { id: 9, island: 'boraBora', name: 'Coral Gardens', coords: [-16.5181, -151.7058], description: "A natural underwater park with vibrant coral and abundant marine life, perfect for snorkeling." },
+            ];
+
+            document.addEventListener('DOMContentLoaded', () => {
+                // MITIGATION FOR B-002: Wrap main logic in try/catch for robust error handling
+                try {
+                    initializeApplication();
+                } catch (error) {
+                    console.error("CATACLYSMIC FAILURE: Application initialization failed.", error);
+                    // Optionally display a user-friendly error message on the page
+                    document.body.innerHTML = '<div style="color: red; text-align: center; padding-top: 20%;">SYSTEM OFFLINE. A critical error occurred.</div>';
+                }
+            });
+
+            function initializeApplication() {
+                const welcomeOverlay = document.getElementById('welcome-overlay');
+                setTimeout(() => { welcomeOverlay.classList.add('hidden'); }, 4000);
+
+                const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(islands.tahiti.coords, islands.tahiti.zoom);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+                const dock = document.getElementById('attraction-dock');
+                const islandSelector = document.getElementById('island-selector');
+                
+                const markers = {};
+                let currentActiveId = null; // MITIGATION FOR B-006: State variable
+
+                // Create Island Selector Buttons
+                for (const islandKey in islands) {
+                    const island = islands[islandKey];
+                    const button = document.createElement('button');
+                    button.className = 'island-btn';
+                    button.textContent = island.name;
+                    button.dataset.islandKey = islandKey;
+                    if (islandKey === 'tahiti') button.classList.add('active');
+                    islandSelector.appendChild(button);
+                }
+
+                // Create Attraction Cards and Markers
+                attractions.forEach(attraction => {
+                    // MITIGATION FOR B-004: Use semantic <button> for attraction cards
+                    const card = document.createElement('button');
+                    card.className = 'attraction-card';
+                    card.dataset.id = attraction.id;
+                    card.innerHTML = `<h3>${attraction.name}</h3><p>${attraction.description}</p>`;
+                    dock.appendChild(card);
+                    
+                    const customIcon = L.divIcon({ className: 'custom-marker', html: '', iconSize: [16, 16], iconAnchor: [8, 8] });
+                    const marker = L.marker(attraction.coords, { icon: customIcon }).addTo(map);
+                    marker.on('click', () => handleInteraction(attraction.id));
+                    markers[attraction.id] = marker;
+                });
+
+                function handleInteraction(id) {
+                    // MITIGATION FOR B-002: Validate that the attraction exists
+                    const attraction = attractions.find(a => a.id === id);
+                    if (!attraction) {
+                        console.warn(`Interaction failed: No attraction found with ID ${id}.`);
+                        return;
+                    }
+
+                    // MITIGATION B-007: Prevent user meddling during flight
+                    map.dragging.disable();
+                    map.touchZoom.disable();
+                    map.doubleClickZoom.disable();
+                    map.scrollWheelZoom.disable();
+
+                    map.flyTo(attraction.coords, 14, { animate: true, duration: 1.5 });
+                    map.once('moveend', () => {
+                        map.dragging.enable();
+                        map.touchZoom.enable();
+                        map.doubleClickZoom.enable();
+                        map.scrollWheelZoom.enable();
+                    });
+
+                    updateActiveStates(id);
+                }
+
+                function updateActiveStates(activeId) {
+                    // MITIGATION FOR B-006: Efficient state update, no full traversals
+                    if (currentActiveId === activeId) return; // No change needed
+
+                    // Deactivate previous
+                    if (currentActiveId) {
+                        document.querySelector(`.attraction-card[data-id='${currentActiveId}']`)?.classList.remove('active');
+                        markers[currentActiveId]?._icon?.classList.remove('active');
+                    }
+
+                    // Activate new
+                    const activeCard = document.querySelector(`.attraction-card[data-id='${activeId}']`);
+                    if (activeCard) {
+                        activeCard.classList.add('active');
+                        activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                    markers[activeId]?._icon?.classList.add('active');
+                    
+                    currentActiveId = activeId;
+                }
+
+                // MITIGATION FOR B-005: Use event delegation for attraction dock
+                dock.addEventListener('click', (e) => {
+                    const card = e.target.closest('.attraction-card');
+                    if (card) {
+                        const id = parseInt(card.dataset.id, 10);
+                        handleInteraction(id);
+                    }
+                });
+                
+                // MITIGATION FOR B-004: Add keyboard navigation for the dock
+                dock.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        dock.scrollBy({ left: 300, behavior: 'smooth' });
+                    } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        dock.scrollBy({ left: -300, behavior: 'smooth' });
+                    }
+                });
+
+                islandSelector.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('island-btn')) {
+                        document.querySelectorAll('.island-btn').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+
+                        const island = islands[e.target.dataset.islandKey];
+                        if(island) map.flyTo(island.coords, island.zoom, { duration: 2 });
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
