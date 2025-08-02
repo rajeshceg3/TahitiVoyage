@@ -27,7 +27,7 @@
         body { margin: 0; padding: 0; background-color: var(--deep-lagoon); font-family: var(--font-sans); color: var(--pearl); overflow: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; background: linear-gradient(-45deg, #0a192f, #0f2140, #0a192f, #112a4a); background-size: 400% 400%; animation: gradient-flow 15s ease-in-out infinite; }
         @keyframes gradient-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .leaflet-tile-pane { filter: brightness(0.8) contrast(1.2) saturate(0.8); }
+        .leaflet-tile-pane { filter: brightness(0.7) contrast(1.2) saturate(4) sepia(1) hue-rotate(180deg); }
         .leaflet-control-zoom { display: none; }
         .leaflet-marker-icon.custom-marker { border-radius: 50%; background-color: rgba(100, 255, 218, 0.8); border: 2px solid var(--sunlit-shallows); box-shadow: 0 0 15px var(--sunlit-shallows); transition: transform 0.3s ease-in-out; }
         .leaflet-marker-icon.custom-marker::before { content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border-radius: 50%; background-color: var(--sunlit-shallows); animation: pulse 2s infinite; z-index: -1; transform-origin: center; }
