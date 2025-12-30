@@ -32,6 +32,9 @@
         .leaflet-marker-icon.custom-marker { border-radius: 50%; background-color: rgba(100, 255, 218, 0.8); border: 2px solid var(--sunlit-shallows); box-shadow: 0 0 15px var(--sunlit-shallows); transition: transform 0.3s ease-in-out; }
         .leaflet-marker-icon.custom-marker::before { content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border-radius: 50%; background-color: var(--sunlit-shallows); animation: pulse 2s infinite; z-index: -1; transform-origin: center; }
         .leaflet-marker-icon.custom-marker.active { transform: scale(1.5); box-shadow: 0 0 25px var(--sunlit-shallows), 0 0 35px var(--sunlit-shallows); }
+        /* PALETTE UX: Styled tooltips for markers */
+        .leaflet-tooltip.custom-tooltip { background-color: var(--deep-lagoon); border: 1px solid var(--sunlit-shallows); color: var(--sunlit-shallows); font-family: var(--font-sans); box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; }
+        .leaflet-tooltip-top:before { border-top-color: var(--sunlit-shallows); }
         @keyframes pulse { 0% { transform: scale(0.9); opacity: 0.7; } 70% { transform: scale(2.5); opacity: 0; } 100% { transform: scale(0.9); opacity: 0; } }
         .ui-container { position: absolute; z-index: 10; padding: 1.5rem; pointer-events: none; }
         .ui-container > * { pointer-events: auto; }
@@ -153,7 +156,9 @@
                     dock.appendChild(card);
                     
                     const customIcon = L.divIcon({ className: 'custom-marker', html: '', iconSize: [16, 16], iconAnchor: [8, 8] });
-                    const marker = L.marker(attraction.coords, { icon: customIcon }).addTo(map);
+                    // PALETTE UX: Added title for accessibility and styled tooltip for delight
+                    const marker = L.marker(attraction.coords, { icon: customIcon, title: attraction.name }).addTo(map);
+                    marker.bindTooltip(attraction.name, { offset: [0, -10], direction: 'top', className: 'custom-tooltip' });
                     marker.on('click', () => handleInteraction(attraction.id));
                     markers[attraction.id] = marker;
                 });
