@@ -72,7 +72,7 @@
 
     <header id="header" class="ui-container">
         <h1>An Exploration</h1>
-        <nav id="island-selector"></nav>
+        <nav id="island-selector" aria-label="Choose island"></nav>
     </header>
 
     <div id="attraction-dock-wrapper" class="ui-container">
@@ -142,7 +142,10 @@
                     button.className = 'island-btn';
                     button.textContent = island.name;
                     button.dataset.islandKey = islandKey;
-                    if (islandKey === 'tahiti') button.classList.add('active');
+                    // PALETTE UX: Accessibility improvements
+                    const isActive = islandKey === 'tahiti';
+                    if (isActive) button.classList.add('active');
+                    button.setAttribute('aria-current', isActive ? 'true' : 'false');
                     islandSelector.appendChild(button);
                 }
 
@@ -231,8 +234,12 @@
 
                 islandSelector.addEventListener('click', (e) => {
                     if (e.target.classList.contains('island-btn')) {
-                        document.querySelectorAll('.island-btn').forEach(btn => btn.classList.remove('active'));
+                        document.querySelectorAll('.island-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                            btn.setAttribute('aria-current', 'false');
+                        });
                         e.target.classList.add('active');
+                        e.target.setAttribute('aria-current', 'true');
 
                         const island = islands[e.target.dataset.islandKey];
                         if(island) map.flyTo(island.coords, island.zoom, { duration: 2 });
