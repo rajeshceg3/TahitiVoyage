@@ -76,7 +76,8 @@
     </header>
 
     <div id="attraction-dock-wrapper" class="ui-container">
-        <div id="attraction-dock" tabindex="0"></div>
+        <!-- PALETTE UX: Added aria-label for accessibility -->
+        <div id="attraction-dock" tabindex="0" aria-label="Attractions list"></div>
     </div>
 
     <!-- Leaflet JS with SRI - MITIGATION FOR B-001 -->
@@ -222,13 +223,19 @@
                 });
                 
                 // MITIGATION FOR B-004: Add keyboard navigation for the dock
+                // PALETTE UX: Improved keyboard navigation (Focus Management) per Journal 2024-05-25
                 dock.addEventListener('keydown', (e) => {
+                    const cards = Array.from(dock.querySelectorAll('.attraction-card'));
+                    const currentIndex = cards.indexOf(document.activeElement);
+
                     if (e.key === 'ArrowRight') {
                         e.preventDefault();
-                        dock.scrollBy({ left: 300, behavior: 'smooth' });
+                        const nextIndex = currentIndex + 1;
+                        if (nextIndex < cards.length) cards[nextIndex].focus();
                     } else if (e.key === 'ArrowLeft') {
                         e.preventDefault();
-                        dock.scrollBy({ left: -300, behavior: 'smooth' });
+                        const prevIndex = currentIndex - 1;
+                        if (prevIndex >= 0) cards[prevIndex].focus();
                     }
                 });
 
