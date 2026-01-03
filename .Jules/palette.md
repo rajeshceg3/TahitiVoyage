@@ -9,3 +9,7 @@
 ## 2024-05-25 - Scroll vs. Focus Navigation
 **Learning:** Mapping arrow keys to manually scroll a container (e.g., `scrollBy`) is an anti-pattern for lists of interactive items. It moves the viewport but leaves keyboard focus behind, disorienting users.
 **Action:** When implementing arrow key navigation for lists/docks, always move the *focus* (e.g., `.focus()`). Browsers automatically scroll the focused element into view, ensuring the viewport and focus stay synchronized.
+
+## 2024-05-26 - Keyboard Navigation & Tabbing Fatigue
+**Learning:** While ensuring elements are focusable is good, having a focusable container (`tabindex="0"`) wrapping a list of focusable items creates a redundant tab stop. Furthermore, leaving all items in the tab sequence (`tabindex="0"`) for a long list causes 'tabbing fatigue'.
+**Action:** Implement the 'Roving Tabindex' pattern: make the container non-focusable (or `tabindex="-1"`) and ensure only the *active* item in the list has `tabindex="0"`, managing focus via arrow keys.
