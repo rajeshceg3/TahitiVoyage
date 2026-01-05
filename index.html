@@ -64,6 +64,12 @@
         .skip-link:focus { top: 0; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         #header:focus { outline: none; }
         @media (max-width: 768px) { #header { flex-direction: column; align-items: flex-start; gap: 1rem; } #header h1 { font-size: 1.5rem; } .island-btn { font-size: 0.9rem; } #island-selector { gap: 1rem; } .attraction-card { flex-basis: 280px; } .typewriter h1 { font-size: 1.8rem; } }
+        /* PALETTE UX: Reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            body { animation: none; background-position: 50% 50%; }
+            .leaflet-marker-icon.custom-marker::before { animation: none; opacity: 0.3; transform: scale(1); }
+            #welcome-overlay, .island-btn, .attraction-card, .skip-link, .leaflet-marker-icon.custom-marker { transition: none; }
+        }
     </style>
 </head>
 <body>
@@ -190,7 +196,10 @@
                     map.doubleClickZoom.disable();
                     map.scrollWheelZoom.disable();
 
-                    map.flyTo(attraction.coords, 14, { animate: true, duration: 1.5 });
+                    // PALETTE UX: Respect reduced motion preference
+                    const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    map.flyTo(attraction.coords, 14, { animate: !isReducedMotion, duration: isReducedMotion ? 0 : 1.5 });
+
                     map.once('moveend', () => {
                         map.dragging.enable();
                         map.touchZoom.enable();
@@ -272,7 +281,11 @@
                         e.target.setAttribute('aria-current', 'true');
 
                         const island = islands[e.target.dataset.islandKey];
-                        if(island) map.flyTo(island.coords, island.zoom, { duration: 2 });
+                        if (island) {
+                            // PALETTE UX: Respect reduced motion preference
+                            const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                            map.flyTo(island.coords, island.zoom, { duration: isReducedMotion ? 0 : 2 });
+                        }
                     }
                 });
             }

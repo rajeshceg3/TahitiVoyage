@@ -13,3 +13,7 @@
 ## 2024-05-26 - Keyboard Navigation & Tabbing Fatigue
 **Learning:** While ensuring elements are focusable is good, having a focusable container (`tabindex="0"`) wrapping a list of focusable items creates a redundant tab stop. Furthermore, leaving all items in the tab sequence (`tabindex="0"`) for a long list causes 'tabbing fatigue'.
 **Action:** Implement the 'Roving Tabindex' pattern: make the container non-focusable (or `tabindex="-1"`) and ensure only the *active* item in the list has `tabindex="0"`, managing focus via arrow keys.
+
+## 2024-05-27 - Reduced Motion in Leaflet
+**Learning:** Large, sweeping map animations (like `flyTo`) can trigger vestibular disorders. Standard CSS `prefers-reduced-motion` queries don't automatically affect JS-driven animations in libraries like Leaflet.
+**Action:** Check `window.matchMedia('(prefers-reduced-motion: reduce)').matches` before triggering map animations. If true, set `duration` to `0` or use `setView` to provide an instant, safe transition.
