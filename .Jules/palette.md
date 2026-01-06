@@ -17,3 +17,7 @@
 ## 2024-05-27 - Reduced Motion in Leaflet
 **Learning:** Large, sweeping map animations (like `flyTo`) can trigger vestibular disorders. Standard CSS `prefers-reduced-motion` queries don't automatically affect JS-driven animations in libraries like Leaflet.
 **Action:** Check `window.matchMedia('(prefers-reduced-motion: reduce)').matches` before triggering map animations. If true, set `duration` to `0` or use `setView` to provide an instant, safe transition.
+
+## 2024-05-28 - Dynamic Content & Screen Readers
+**Learning:** Visual-heavy interactions like map pans/zooms (e.g., `flyTo`) are completely invisible to screen readers unless explicitly announced.
+**Action:** Use an `aria-live="polite"` region and programmatically update its text content (e.g., "Map view updated to Tahiti") whenever the application state changes significantly in a way that isn't focused.
