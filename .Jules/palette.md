@@ -21,3 +21,7 @@
 ## 2024-05-28 - Dynamic Content & Screen Readers
 **Learning:** Visual-heavy interactions like map pans/zooms (e.g., `flyTo`) are completely invisible to screen readers unless explicitly announced.
 **Action:** Use an `aria-live="polite"` region and programmatically update its text content (e.g., "Map view updated to Tahiti") whenever the application state changes significantly in a way that isn't focused.
+
+## 2024-05-29 - Linked Component State
+**Learning:** When multiple components (like a map marker and a list item) represent the same entity, updating one should reflect the state in the other semantically, not just visually.
+**Action:** Ensure state changes trigger updates to attributes like `aria-current` or `aria-selected` on all related interface elements to keep screen reader users in sync.

@@ -196,6 +196,7 @@
                     card.innerHTML = `<h3>${attraction.name}</h3><p>${attraction.description}</p>`;
                     // PALETTE UX: Roving Tabindex initialization
                     card.setAttribute('tabindex', index === 0 ? '0' : '-1');
+                    card.setAttribute('aria-current', 'false');
                     dock.appendChild(card);
                     
                     const customIcon = L.divIcon({ className: 'custom-marker', html: '', iconSize: [16, 16], iconAnchor: [8, 8] });
@@ -241,7 +242,11 @@
 
                     // Deactivate previous
                     if (currentActiveId) {
-                        document.querySelector(`.attraction-card[data-id='${currentActiveId}']`)?.classList.remove('active');
+                        const prevCard = document.querySelector(`.attraction-card[data-id='${currentActiveId}']`);
+                        if (prevCard) {
+                            prevCard.classList.remove('active');
+                            prevCard.setAttribute('aria-current', 'false');
+                        }
                         markers[currentActiveId]?._icon?.classList.remove('active');
                     }
 
@@ -249,6 +254,7 @@
                     const activeCard = document.querySelector(`.attraction-card[data-id='${activeId}']`);
                     if (activeCard) {
                         activeCard.classList.add('active');
+                        activeCard.setAttribute('aria-current', 'true');
                         activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                     }
                     markers[activeId]?._icon?.classList.add('active');
