@@ -188,24 +188,35 @@
                 }
 
                 // Create Attraction Cards and Markers
-                attractions.forEach((attraction, index) => {
-                    // MITIGATION FOR B-004: Use semantic <button> for attraction cards
-                    const card = document.createElement('button');
-                    card.className = 'attraction-card';
-                    card.dataset.id = attraction.id;
-                    card.innerHTML = `<h3>${attraction.name}</h3><p>${attraction.description}</p>`;
-                    // PALETTE UX: Roving Tabindex initialization
-                    card.setAttribute('tabindex', index === 0 ? '0' : '-1');
-                    card.setAttribute('aria-current', 'false');
-                    dock.appendChild(card);
-                    
-                    const customIcon = L.divIcon({ className: 'custom-marker', html: '', iconSize: [16, 16], iconAnchor: [8, 8] });
-                    // PALETTE UX: Added title for accessibility and styled tooltip for delight
-                    const marker = L.marker(attraction.coords, { icon: customIcon, title: attraction.name }).addTo(map);
-                    marker.bindTooltip(attraction.name, { offset: [0, -10], direction: 'top', className: 'custom-tooltip' });
-                    marker.on('click', () => handleInteraction(attraction.id));
-                    markers[attraction.id] = marker;
-                });
+                function renderAttractions(islandKey) {
+                    // Clear existing
+                    dock.innerHTML = '';
+                    Object.values(markers).forEach(marker => marker.remove());
+                    for (const key in markers) delete markers[key];
+
+                    const filteredAttractions = attractions.filter(a => a.island === islandKey);
+
+                    filteredAttractions.forEach((attraction, index) => {
+                        // MITIGATION FOR B-004: Use semantic <button> for attraction cards
+                        const card = document.createElement('button');
+                        card.className = 'attraction-card';
+                        card.dataset.id = attraction.id;
+                        card.innerHTML = `<h3>${attraction.name}</h3><p>${attraction.description}</p>`;
+                        // PALETTE UX: Roving Tabindex initialization
+                        card.setAttribute('tabindex', index === 0 ? '0' : '-1');
+                        card.setAttribute('aria-current', 'false');
+                        dock.appendChild(card);
+
+                        const customIcon = L.divIcon({ className: 'custom-marker', html: '', iconSize: [16, 16], iconAnchor: [8, 8] });
+                        // PALETTE UX: Added title for accessibility and styled tooltip for delight
+                        const marker = L.marker(attraction.coords, { icon: customIcon, title: attraction.name }).addTo(map);
+                        marker.bindTooltip(attraction.name, { offset: [0, -10], direction: 'top', className: 'custom-tooltip' });
+                        marker.on('click', () => handleInteraction(attraction.id));
+                        markers[attraction.id] = marker;
+                    });
+                }
+
+                renderAttractions('tahiti');
 
                 function handleInteraction(id) {
                     // MITIGATION FOR B-002: Validate that the attraction exists
@@ -284,10 +295,10 @@
 
                     if (e.key === 'ArrowRight') {
                         nextIndex = currentIndex + 1;
-                        if (nextIndex >= cards.length) nextIndex = -1; // Boundary check
+                        if (nextIndex >= cards.length) nextIndex = 0; // Wrap to start
                     } else if (e.key === 'ArrowLeft') {
                         nextIndex = currentIndex - 1;
-                        if (nextIndex < 0) nextIndex = -1; // Boundary check
+                        if (nextIndex < 0) nextIndex = cards.length - 1; // Wrap to end
                     } else if (e.key === 'Home') {
                          nextIndex = 0;
                     } else if (e.key === 'End') {
@@ -303,20 +314,29 @@
                 });
 
                 islandSelector.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('island-btn')) {
-                        document.querySelectorAll('.island-btn').forEach(btn => {
-                            btn.classList.remove('active');
-                            btn.setAttribute('aria-current', 'false');
-                        });
-                        e.target.classList.add('active');
-                        e.target.setAttribute('aria-current', 'true');
+                    const btn = e.target.closest('.island-btn');
+                    if (btn) {
+                        const islandKey = btn.dataset.islandKey;
+                        const island = islands[islandKey];
 
-                        const island = islands[e.target.dataset.islandKey];
                         if (island) {
+                            // Update active state
+                            document.querySelectorAll('.island-btn').forEach(b => {
+                                const isActive = b === btn;
+                                b.classList.toggle('active', isActive);
+                                b.setAttribute('aria-current', isActive ? 'true' : 'false');
+                            });
+
+                            // Render attractions for the selected island
+                            renderAttractions(islandKey);
+
                             // PALETTE UX: Respect reduced motion preference
                             const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                             map.flyTo(island.coords, island.zoom, { duration: isReducedMotion ? 0 : 2 });
                             announceMapUpdate(island.name);
+
+                            // Reset state
+                            currentActiveId = null;
                         }
                     }
                 });
