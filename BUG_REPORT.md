@@ -5,39 +5,48 @@
 **OFFICER:** Jules, QA Task Force
 
 ## 1. EXECUTIVE SUMMARY
-A comprehensive security and quality assurance audit was conducted on the target application. While the core visual presentation is high-quality, critical architectural flaws in state management and data filtering were identified, severely compromising user experience and logical integrity.
+A comprehensive security and quality assurance audit was conducted on the target application. While the core visual presentation is high-quality and previous Critical/High bugs (BUG-001, BUG-002) have been verified as FIXED, several new issues impacting Accessibility, User Experience, and Performance were identified during forensic analysis.
 
-## 2. CRITICAL FINDINGS (SEVERITY: CRITICAL)
+## 2. NEW CRITICAL/HIGH FINDINGS
 
-### [BUG-001] Global Attraction Leakage (Fixed)
-**Description:** The attraction dock displayed the entire dataset (all islands) simultaneously, disregarding the user's selected context (Island).
-**Impact:** Logical incoherence, user confusion, information overload.
-**Remediation:** implemented `renderAttractions()` module to enforce strict data filtering based on the active `islandKey`. Validated via automated regression testing (`tests/bugs.spec.js`).
+### [UX-002] Mandatory Blocking Overlay (Severity: HIGH)
+**Description:** The "Welcome Overlay" blocks all user interaction for 4 seconds on every page load, with no option to skip. This violates user control principles and degrades perceived performance.
+**Reproduction:** Refresh the page. Observe inability to interact for 4+ seconds.
+**Recommendation:** Implement a dismiss mechanism or only show on first visit (session storage). At minimum, reduce duration.
 
-## 3. HIGH PRIORITY FINDINGS (SEVERITY: HIGH)
+### [ACC-002] Map Container Inaccessible (Severity: HIGH)
+**Description:** The `#map` container lacks an `aria-label` or `role`, making it a "black hole" for screen reader users who cannot determine what the region represents.
+**Reproduction:** Inspect `#map` with dev tools or screen reader.
+**Recommendation:** Add `role="application"` and `aria-label="Interactive map of attractions"`.
 
-### [BUG-002] State Desynchronization
-**Description:** Switching islands did not reset the "active" attraction state, potentially leaving a ghost state or invalid focus.
-**Remediation:** Implemented `currentActiveId` reset logic within the island switching handler.
+## 3. MEDIUM PRIORITY FINDINGS
 
-### [UX-001] Keyboard Navigation Dead-End
-**Description:** The "Roving Tabindex" implementation for the attraction dock failed to wrap around boundaries, trapping keyboard users at the end of the list.
-**Remediation:** Implemented circular navigation logic (End -> Start, Start -> End) for `ArrowRight` and `ArrowLeft` events.
+### [UX-003] Hidden Zoom Controls (Severity: MEDIUM)
+**Description:** Leaflet zoom controls are explicitly hidden via CSS (`display: none`), impacting users who rely on click-based zooming (e.g., motor impairments or lack of scroll wheel/gesture support).
+**Reproduction:** Observe map corners. No zoom buttons visible.
+**Recommendation:** Remove `.leaflet-control-zoom { display: none; }` or provide custom accessible buttons.
 
-## 4. MEDIUM PRIORITY FINDINGS (SEVERITY: MEDIUM)
+### [PERF-001] Expensive Backdrop Filters (Severity: MEDIUM)
+**Description:** The `.attraction-card` uses `backdrop-filter: blur(10px)`. On lower-end devices or when many cards are present, this causes compositor layer explosion and scroll lag.
+**Recommendation:** Disable blur on low-power mode or use a static fallback.
 
-### [ACC-001] Event Delegation Precision
-**Description:** The click handler for island buttons relied on `e.target` instead of `closest()`, which would break if the button content became complex (e.g., added icons).
-**Remediation:** Refactored to use `e.target.closest('.island-btn')` for robust event delegation.
+## 4. VERIFIED FIXED ISSUES (Regression Testing Passed)
 
-## 5. ARCHITECTURAL OBSERVATIONS
+*   **[BUG-001] Global Attraction Leakage:** FIXED. Filtering works correctly.
+*   **[BUG-002] State Desynchronization:** FIXED. Active state resets on island switch.
+*   **[UX-001] Keyboard Navigation Dead-End:** FIXED. Roving tabindex wraps correctly.
+*   **[ACC-003] Map Marker Keyboard Accessibility:** PASSED. Markers have `tabindex="0"` (default by Leaflet).
 
-*   **Dependency Management:** The project lacked a package manager. `pnpm` was initialized, and a test harness (Playwright) was established to ensure future stability.
-*   **Performance:** Leaflet markers were not cleaned up when switching views. Refactoring now properly disposes of markers to prevent memory leaks and DOM clutter.
+## 5. EDGE CASE ANALYSIS
 
-## 6. VALIDATION STATUS
-*   **Automated Tests:** PASS (Island Filtering Verified).
-*   **Manual Verification:** PASS (Visual inspection of filtering and marker updates).
-*   **Accessibility Check:** PASS (Keyboard nav, ARIA attributes).
+*   **[EDGE-001] Rapid Island Switching:** PASSED. System handles rapid clicks without crashing or state corruption.
+*   **[EDGE-002] Reduced Motion:** Code contains checks for `prefers-reduced-motion`. (Verified by code review).
 
-**MISSION STATUS:** OBJECTIVES ACHIEVED. SYSTEM INTEGRITY RESTORED.
+## 6. REMEDIATION PLAN
+
+1.  **Fix UX-002**: Reduce overlay time or make dismissible.
+2.  **Fix ACC-002**: Add ARIA attributes to map container.
+3.  **Fix UX-003**: Restore zoom controls.
+4.  **Fix PERF-001**: Optimize CSS.
+
+**MISSION STATUS:** REPORT FILED. AWAITING REMEDIATION.
