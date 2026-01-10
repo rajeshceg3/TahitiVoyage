@@ -28,7 +28,7 @@
         @keyframes gradient-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         .leaflet-tile-pane { }
-        .leaflet-control-zoom { display: none; }
+        /* .leaflet-control-zoom { display: none; } -- PALETTE UX: Restored zoom controls (UX-003) */
         .leaflet-marker-icon.custom-marker { border-radius: 50%; background-color: rgba(100, 255, 218, 0.8); border: 2px solid var(--sunlit-shallows); box-shadow: 0 0 15px var(--sunlit-shallows); transition: transform 0.3s ease-in-out; }
         .leaflet-marker-icon.custom-marker::before { content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border-radius: 50%; background-color: var(--sunlit-shallows); animation: pulse 2s infinite; z-index: -1; transform-origin: center; }
         .leaflet-marker-icon.custom-marker.active { transform: scale(1.5); box-shadow: 0 0 25px var(--sunlit-shallows), 0 0 35px var(--sunlit-shallows); }
@@ -63,12 +63,16 @@
         #attraction-dock { display: flex; gap: 1rem; overflow-x: auto; padding: 1.5rem; padding-top: 1rem; -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; /* For keyboard nav */ }
         #attraction-dock::-webkit-scrollbar { display: none; }
         /* MITIGATION FOR B-004: Styling a <button> instead of a <div> */
-        .attraction-card { flex: 0 0 320px; padding: 1.5rem; background: var(--volcanic-glass); border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 12px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform 0.4s ease, box-shadow 0.4s ease; cursor: pointer; text-align: left; font-family: var(--font-sans); }
+        /* PERF-001: Removed backdrop-filter default, applied via @supports for capable devices */
+        .attraction-card { flex: 0 0 320px; padding: 1.5rem; background: var(--volcanic-glass); border: 1px solid rgba(100, 255, 218, 0.1); border-radius: 12px; transition: transform 0.4s ease, box-shadow 0.4s ease; cursor: pointer; text-align: left; font-family: var(--font-sans); }
+        @supports (backdrop-filter: blur(10px)) {
+            .attraction-card { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        }
         .attraction-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px -15px rgba(0,0,0,0.7); }
         .attraction-card.active, .attraction-card:focus-visible { transform: translateY(-10px) scale(1.05); box-shadow: 0 0 20px -5px var(--sunlit-shallows); border-color: var(--sunlit-shallows); outline: none; }
         .attraction-card h3 { margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 500; color: var(--pearl); pointer-events: none; /* Allow click on child */ }
         .attraction-card p { margin: 0; font-size: 0.95rem; color: var(--pearl-muted); line-height: 1.5; pointer-events: none; /* Allow click on child */ }
-        #welcome-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--deep-lagoon); z-index: 1000; display: flex; justify-content: center; align-items: center; transition: opacity 1.5s ease-in-out 1s; }
+        #welcome-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--deep-lagoon); z-index: 1000; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-in-out 0.5s; cursor: pointer; }
         #welcome-overlay.hidden { opacity: 0; pointer-events: none; }
         .typewriter h1 { font-size: 3rem; font-weight: 300; color: var(--pearl); overflow: hidden; border-right: .15em solid var(--sunlit-shallows); white-space: nowrap; margin: 0 auto; letter-spacing: .1em; animation: typing 2.5s steps(30, end), blink-caret .75s step-end infinite; }
         @keyframes typing { from { width: 0 } to { width: 100% } }
@@ -100,7 +104,8 @@
         <div class="typewriter"><h1>Discover Tahiti.</h1></div>
     </div>
 
-    <div id="map"></div>
+    <!-- PALETTE UX: Added role and label for accessibility (ACC-002) -->
+    <div id="map" role="application" aria-label="Interactive map of Tahiti attractions"></div>
 
     <header id="header" class="ui-container" tabindex="-1">
         <h1>An Exploration</h1>
@@ -154,9 +159,18 @@
 
             function initializeApplication() {
                 const welcomeOverlay = document.getElementById('welcome-overlay');
-                setTimeout(() => { welcomeOverlay.classList.add('hidden'); }, 4000);
 
-                const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(islands.tahiti.coords, islands.tahiti.zoom);
+                // PALETTE UX: Allow early dismissal and reduce default wait
+                const hideOverlay = () => { welcomeOverlay.classList.add('hidden'); };
+                welcomeOverlay.addEventListener('click', hideOverlay);
+                welcomeOverlay.addEventListener('keydown', (e) => { if(e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') hideOverlay(); });
+                // Make overlay focusable for keyboard users to dismiss
+                welcomeOverlay.setAttribute('tabindex', '0');
+                welcomeOverlay.focus();
+
+                setTimeout(hideOverlay, 2500); // Reduced from 4000ms
+
+                const map = L.map('map', { zoomControl: true, attributionControl: false }).setView(islands.tahiti.coords, islands.tahiti.zoom);
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                     maxZoom: 19,
                     attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
