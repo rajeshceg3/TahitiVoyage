@@ -160,15 +160,27 @@
             function initializeApplication() {
                 const welcomeOverlay = document.getElementById('welcome-overlay');
 
-                // PALETTE UX: Allow early dismissal and reduce default wait
-                const hideOverlay = () => { welcomeOverlay.classList.add('hidden'); };
-                welcomeOverlay.addEventListener('click', hideOverlay);
-                welcomeOverlay.addEventListener('keydown', (e) => { if(e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') hideOverlay(); });
-                // Make overlay focusable for keyboard users to dismiss
-                welcomeOverlay.setAttribute('tabindex', '0');
-                welcomeOverlay.focus();
+                // MITIGATION FOR UX-002: Check session storage to show overlay only once
+                const hasSeenOverlay = sessionStorage.getItem('tahiti_welcome_seen');
 
-                setTimeout(hideOverlay, 2500); // Reduced from 4000ms
+                const hideOverlay = () => {
+                    welcomeOverlay.classList.add('hidden');
+                    sessionStorage.setItem('tahiti_welcome_seen', 'true');
+                };
+
+                if (hasSeenOverlay) {
+                    welcomeOverlay.style.display = 'none'; // Instant hide for returning users
+                    welcomeOverlay.classList.add('hidden');
+                } else {
+                    // PALETTE UX: Allow early dismissal and reduce default wait
+                    welcomeOverlay.addEventListener('click', hideOverlay);
+                    welcomeOverlay.addEventListener('keydown', (e) => { if(e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') hideOverlay(); });
+                    // Make overlay focusable for keyboard users to dismiss
+                    welcomeOverlay.setAttribute('tabindex', '0');
+                    welcomeOverlay.focus();
+
+                    setTimeout(hideOverlay, 2500); // Reduced from 4000ms
+                }
 
                 const map = L.map('map', { zoomControl: true, attributionControl: false }).setView(islands.tahiti.coords, islands.tahiti.zoom);
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -215,7 +227,15 @@
                         const card = document.createElement('button');
                         card.className = 'attraction-card';
                         card.dataset.id = attraction.id;
-                        card.innerHTML = `<h3>${attraction.name}</h3><p>${attraction.description}</p>`;
+
+                        // MITIGATION FOR VULN-001: Prevent XSS by using textContent
+                        const h3 = document.createElement('h3');
+                        h3.textContent = attraction.name;
+                        const p = document.createElement('p');
+                        p.textContent = attraction.description;
+                        card.appendChild(h3);
+                        card.appendChild(p);
+
                         // PALETTE UX: Roving Tabindex initialization
                         card.setAttribute('tabindex', index === 0 ? '0' : '-1');
                         card.setAttribute('aria-current', 'false');
@@ -232,6 +252,8 @@
 
                 renderAttractions('tahiti');
 
+                let flightController = null;
+
                 function handleInteraction(id) {
                     // MITIGATION FOR B-002: Validate that the attraction exists
                     const attraction = attractions.find(a => a.id === id);
@@ -246,17 +268,25 @@
                     map.doubleClickZoom.disable();
                     map.scrollWheelZoom.disable();
 
+                    // MITIGATION FOR UX-004: Clear previous flight cleanup listener to prevent lockout
+                    if (flightController) {
+                        map.off('moveend', flightController);
+                    }
+
                     // PALETTE UX: Respect reduced motion preference
                     const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                     map.flyTo(attraction.coords, 14, { animate: !isReducedMotion, duration: isReducedMotion ? 0 : 1.5 });
                     announceMapUpdate(attraction.name);
 
-                    map.once('moveend', () => {
+                    flightController = () => {
                         map.dragging.enable();
                         map.touchZoom.enable();
                         map.doubleClickZoom.enable();
                         map.scrollWheelZoom.enable();
-                    });
+                        flightController = null;
+                    };
+
+                    map.once('moveend', flightController);
 
                     updateActiveStates(id);
                 }
