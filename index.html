@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SECURITY: Added Content-Security-Policy to prevent XSS and other injections -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://server.arcgisonline.com https://unpkg.com; connect-src 'self' https://server.arcgisonline.com;">
     <title>Tahiti | An Exploration [SECURE]</title>
     
     <!-- Leaflet CSS with Subresource Integrity (SRI) - MITIGATION FOR B-001 -->
@@ -112,10 +114,12 @@
         <nav id="island-selector" aria-label="Choose island"></nav>
     </header>
 
-    <div id="attraction-dock-wrapper" class="ui-container">
-        <!-- PALETTE UX: Added aria-label for accessibility -->
-    <div id="attraction-dock" aria-label="Attractions list"></div>
-    </div>
+    <main id="main-content">
+        <div id="attraction-dock-wrapper" class="ui-container">
+            <!-- PALETTE UX: Added aria-label for accessibility -->
+            <div id="attraction-dock" aria-label="Attractions list"></div>
+        </div>
+    </main>
 
     <!-- Leaflet JS with SRI - MITIGATION FOR B-001 -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
@@ -166,6 +170,10 @@
                 const hideOverlay = () => {
                     welcomeOverlay.classList.add('hidden');
                     sessionStorage.setItem('tahiti_welcome_seen', 'true');
+                    // FIX: Ensure it is truly hidden from accessibility tree and tests after transition
+                    setTimeout(() => {
+                        welcomeOverlay.style.display = 'none';
+                    }, 1000); // 1s matches transition duration (0.5s delay + 0.5s fade)
                 };
 
                 if (hasSeenOverlay) {
@@ -229,11 +237,17 @@
                         card.dataset.id = attraction.id;
 
                         // MITIGATION FOR VULN-001: Prevent XSS by using textContent
-                        const h3 = document.createElement('h3');
-                        h3.textContent = attraction.name;
+                        // ACC-FIX: Changed h3 to h2 to maintain heading hierarchy (h1 -> h2)
+                        const h2 = document.createElement('h2');
+                        h2.style.fontSize = '1.25rem'; // Maintain visual style
+                        h2.style.margin = '0 0 0.5rem 0';
+                        h2.style.fontWeight = '500';
+                        h2.style.color = 'var(--pearl)';
+                        h2.style.pointerEvents = 'none';
+                        h2.textContent = attraction.name;
                         const p = document.createElement('p');
                         p.textContent = attraction.description;
-                        card.appendChild(h3);
+                        card.appendChild(h2);
                         card.appendChild(p);
 
                         // PALETTE UX: Roving Tabindex initialization
