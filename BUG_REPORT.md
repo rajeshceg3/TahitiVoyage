@@ -42,4 +42,22 @@ A comprehensive security and quality assurance audit was conducted on the target
 
 *   **[PERF-001] Expensive Backdrop Filters:** Mitigated via `@supports`. Further optimization possible but not critical.
 
+## 6. NEW FINDINGS (Audit 2024-05-30)
+
+### [ARCH-001] Missing Manifest and Dependencies (Severity: CRITICAL)
+**Description:** The project lacked a `package.json` file, making dependency management and build reproduction impossible in a standard Node.js environment.
+**Action:** Created `package.json` with scripts for testing and serving.
+
+### [ACC-004] Focus Management Failure (Severity: HIGH)
+**Description:** Upon dismissing the `#welcome-overlay`, keyboard focus is lost (reverts to `body`), forcing users to tab through the entire document to reach navigation.
+**Action:** Implemented programmatic focus restoration to `#header` (using `tabindex="-1"` target) upon overlay dismissal.
+
+### [ACC-005] Overlay Accessibility Semantics (Severity: MEDIUM)
+**Description:** The `#welcome-overlay` functions as a modal but lacked `role="dialog"` and `aria-modal="true"`.
+**Action:** Added semantic attributes to the overlay container.
+
+### [TEST-001] Flaky Overlay Interaction (Severity: LOW)
+**Description:** Automated tests intermittently failed to click the overlay due to map rendering race conditions.
+**Action:** Refined test logic and verified `z-index` stacking contexts.
+
 **MISSION STATUS:** ALL SYSTEMS OPERATIONAL. VULNERABILITIES NEUTRALIZED.
