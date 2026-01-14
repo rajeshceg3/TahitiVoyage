@@ -55,6 +55,12 @@
             // FIX: Ensure it is truly hidden from accessibility tree and tests after transition
             setTimeout(() => {
                 welcomeOverlay.style.display = 'none';
+
+                // PALETTE UX: Restore focus to logical starting point after overlay closes (ACC-004)
+                const header = document.getElementById('header');
+                if (header) {
+                    header.focus();
+                }
             }, 1000); // 1s matches transition duration (0.5s delay + 0.5s fade)
         };
 

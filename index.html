@@ -25,7 +25,8 @@
     <!-- PALETTE UX: Live region for map updates -->
     <div id="map-announcer" class="sr-only" aria-live="polite"></div>
 
-    <div id="welcome-overlay">
+    <!-- PALETTE UX: Added role and aria-modal for accessibility (ACC-005) -->
+    <div id="welcome-overlay" role="dialog" aria-modal="true" aria-label="Welcome Screen">
         <div class="typewriter"><h1>Discover Tahiti.</h1></div>
     </div>
 
