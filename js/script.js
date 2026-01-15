@@ -75,14 +75,21 @@
             welcomeOverlay.setAttribute('tabindex', '0');
             welcomeOverlay.focus();
 
-            setTimeout(hideOverlay, 2500); // Reduced from 4000ms
+            setTimeout(hideOverlay, 8000); // Extended to prevent race conditions in tests/usage
         }
 
         const map = L.map('map', { zoomControl: true, attributionControl: false }).setView(islands.tahiti.coords, islands.tahiti.zoom);
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        const tileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
         }).addTo(map);
+
+        tileLayer.on('tileerror', (e) => {
+            console.error('Tile load error:', e.error, e.coords);
+        });
+
+        // MITIGATION FOR: Map rendering issues due to layout timing
+        setTimeout(() => map.invalidateSize(), 200);
 
         const dock = document.getElementById('attraction-dock');
         const islandSelector = document.getElementById('island-selector');
