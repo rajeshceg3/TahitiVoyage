@@ -57,9 +57,13 @@
                 welcomeOverlay.style.display = 'none';
 
                 // PALETTE UX: Restore focus to logical starting point after overlay closes (ACC-004)
-                const header = document.getElementById('header');
-                if (header) {
-                    header.focus();
+                // Focusing the active island button is more useful than the header container
+                const activeIsland = document.querySelector('.island-btn[aria-current="true"]');
+                if (activeIsland) {
+                    activeIsland.focus();
+                } else {
+                    const header = document.getElementById('header');
+                    if (header) header.focus();
                 }
             }, 1000); // 1s matches transition duration (0.5s delay + 0.5s fade)
         };
@@ -132,18 +136,17 @@
                 card.dataset.id = attraction.id;
 
                 // MITIGATION FOR VULN-001: Prevent XSS by using textContent
-                // ACC-FIX: Changed h3 to h2 to maintain heading hierarchy (h1 -> h2)
-                const h2 = document.createElement('h2');
-                h2.style.fontSize = '1.25rem'; // Maintain visual style
-                h2.style.margin = '0 0 0.5rem 0';
-                h2.style.fontWeight = '500';
-                h2.style.color = 'var(--pearl)';
-                h2.style.pointerEvents = 'none';
-                h2.textContent = attraction.name;
-                const p = document.createElement('p');
-                p.textContent = attraction.description;
-                card.appendChild(h2);
-                card.appendChild(p);
+                // ACC-FIX: Use span with block styling instead of h2/p inside button for valid HTML
+                const title = document.createElement('span');
+                title.className = 'card-title';
+                title.textContent = attraction.name;
+
+                const desc = document.createElement('span');
+                desc.className = 'card-desc';
+                desc.textContent = attraction.description;
+
+                card.appendChild(title);
+                card.appendChild(desc);
 
                 // PALETTE UX: Roving Tabindex initialization
                 card.setAttribute('tabindex', index === 0 ? '0' : '-1');
