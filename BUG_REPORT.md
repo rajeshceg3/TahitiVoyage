@@ -60,4 +60,8 @@ A comprehensive security and quality assurance audit was conducted on the target
 **Description:** Automated tests intermittently failed to click the overlay due to map rendering race conditions.
 **Action:** Refined test logic and verified `z-index` stacking contexts.
 
+### [UX-005] Skip Link Accessibility Failure (Severity: HIGH)
+**Description:** The "Skip to navigation" link was unreachable via keyboard navigation due to off-screen positioning (`top: -100px`) and lack of `tabindex` in the tab sequence.
+**Action:** Refactored CSS to use `transform` for hiding, and explicitly added `tabindex="0"` to the link. Verified with regression tests.
+
 **MISSION STATUS:** ALL SYSTEMS OPERATIONAL. VULNERABILITIES NEUTRALIZED.

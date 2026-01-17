@@ -67,8 +67,8 @@ body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(-
 @keyframes typing { from { width: 0 } to { width: 100% } }
 @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--sunlit-shallows); } }
 /* PALETTE UX: Skip link for keyboard accessibility */
-.skip-link { position: absolute; top: -100px; left: 1rem; padding: 0.75rem 1.25rem; background: var(--deep-lagoon); color: var(--sunlit-shallows); border: 1px solid var(--sunlit-shallows); border-radius: 0 0 4px 4px; z-index: 2000; text-decoration: none; font-weight: 500; transition: top 0.3s ease; }
-.skip-link:focus { top: 0; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+.skip-link { position: absolute; top: 0; left: 1rem; transform: translateY(-150%); padding: 0.75rem 1.25rem; background: var(--deep-lagoon); color: var(--sunlit-shallows); border: 1px solid var(--sunlit-shallows); border-radius: 0 0 4px 4px; z-index: 2000; text-decoration: none; font-weight: 500; transition: transform 0.3s ease; }
+.skip-link:focus { transform: translateY(0); outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 /* PALETTE UX: Utility for screen reader only content */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 #header:focus { outline: none; }
