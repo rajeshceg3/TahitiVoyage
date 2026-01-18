@@ -36,6 +36,11 @@
     });
 
     function initializeApplication() {
+        // NATIVE UX: Haptic feedback helper
+        const triggerHaptic = (ms = 10) => {
+            if (navigator.vibrate) navigator.vibrate(ms);
+        };
+
         const welcomeOverlay = document.getElementById('welcome-overlay');
 
         // MITIGATION FOR UX-002: Check session storage to show overlay only once
@@ -151,6 +156,9 @@
                 card.appendChild(title);
                 card.appendChild(desc);
 
+                // NATIVE UX: Staggered entrance animation
+                card.style.animationDelay = `${index * 50}ms`;
+
                 // PALETTE UX: Roving Tabindex initialization
                 card.setAttribute('tabindex', index === 0 ? '0' : '-1');
                 card.setAttribute('aria-current', 'false');
@@ -170,6 +178,8 @@
         let flightController = null;
 
         function handleInteraction(id) {
+            triggerHaptic(10); // NATIVE UX: Feedback
+
             // MITIGATION FOR B-002: Validate that the attraction exists
             const attraction = attractions.find(a => a.id === id);
             if (!attraction) {
@@ -237,6 +247,7 @@
         dock.addEventListener('click', (e) => {
             const card = e.target.closest('.attraction-card');
             if (card) {
+                triggerHaptic(10); // NATIVE UX: Feedback
                 // PALETTE UX: Sync tabindex with mouse interaction
                 Array.from(dock.children).forEach(c => c.setAttribute('tabindex', '-1'));
                 card.setAttribute('tabindex', '0');
@@ -276,6 +287,7 @@
         islandSelector.addEventListener('click', (e) => {
             const btn = e.target.closest('.island-btn');
             if (btn) {
+                triggerHaptic(5); // NATIVE UX: Feedback
                 const islandKey = btn.dataset.islandKey;
                 const island = islands[islandKey];
 
