@@ -47,7 +47,10 @@
              console.warn('SessionStorage not available', e);
         }
 
+        let autoDismissTimer = null;
+
         const hideOverlay = () => {
+            if (autoDismissTimer) clearTimeout(autoDismissTimer);
             welcomeOverlay.classList.add('hidden');
             try {
                 sessionStorage.setItem('tahiti_welcome_seen', 'true');
@@ -79,7 +82,7 @@
             welcomeOverlay.setAttribute('tabindex', '0');
             welcomeOverlay.focus();
 
-            setTimeout(hideOverlay, 8000); // Extended to prevent race conditions in tests/usage
+            autoDismissTimer = setTimeout(hideOverlay, 8000); // Extended to prevent race conditions in tests/usage
         }
 
         const map = L.map('map', { zoomControl: true, attributionControl: false }).setView(islands.tahiti.coords, islands.tahiti.zoom);
@@ -187,8 +190,6 @@
 
             // PALETTE UX: Respect reduced motion preference
             const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            map.flyTo(attraction.coords, 14, { animate: !isReducedMotion, duration: isReducedMotion ? 0 : 1.5 });
-            announceMapUpdate(attraction.name);
 
             flightController = () => {
                 map.dragging.enable();
@@ -199,6 +200,9 @@
             };
 
             map.once('moveend', flightController);
+
+            map.flyTo(attraction.coords, 14, { animate: !isReducedMotion, duration: isReducedMotion ? 0 : 1.5 });
+            announceMapUpdate(attraction.name);
 
             updateActiveStates(id);
         }
