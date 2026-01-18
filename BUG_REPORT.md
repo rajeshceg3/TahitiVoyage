@@ -64,4 +64,22 @@ A comprehensive security and quality assurance audit was conducted on the target
 **Description:** The "Skip to navigation" link was unreachable via keyboard navigation due to off-screen positioning (`top: -100px`) and lack of `tabindex` in the tab sequence.
 **Action:** Refactored CSS to use `transform` for hiding, and explicitly added `tabindex="0"` to the link. Verified with regression tests.
 
+## 7. SUPPLEMENTAL AUDIT (2026-01-18)
+
+### [CRITICAL] Map Lockout Race Condition (Code Logic)
+**Description:** In `js/script.js`, the `moveend` event listener responsible for re-enabling map interactions is attached *after* the `map.flyTo()` command is issued. If `flyTo` completes synchronously (e.g., zero duration due to Reduced Motion), the event fires before the listener is attached, leaving the map permanently disabled.
+**Mitigation:** Reorder execution flow to attach the listener prior to initiating the animation.
+
+### [HIGH] CSP Connection Blockade
+**Description:** The Content Security Policy `connect-src` directive blocks connections to `fonts.googleapis.com` and `fonts.gstatic.com`, causing console errors and potentially preventing font preloading optimizations.
+**Mitigation:** Whitelist `https://fonts.googleapis.com` and `https://fonts.gstatic.com` in the `connect-src` directive.
+
+### [MEDIUM] Overlay Timer Leak
+**Description:** The 8-second auto-dismiss timer for the welcome overlay is not cleared when the user manually dismisses the overlay. This can lead to race conditions where the overlay logic executes twice.
+**Mitigation:** Implement `clearTimeout` on manual interaction.
+
+### [CRITICAL] Missing Test Infrastructure (Recurrence)
+**Description:** The `tests/` directory was absent from the repository despite configuration references.
+**Mitigation:** Rebuilt `tests/assessment.spec.js` and established a robust Playwright testing baseline.
+
 **MISSION STATUS:** ALL SYSTEMS OPERATIONAL. VULNERABILITIES NEUTRALIZED.
