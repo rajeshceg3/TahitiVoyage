@@ -312,5 +312,148 @@
                 }
             }
         });
+
+        // PALETTE UX: Guided Tour Logic
+        const tourControls = document.getElementById('tour-controls');
+        const tourTitle = document.getElementById('tour-title');
+        const tourDesc = document.getElementById('tour-desc');
+        const tourNextBtn = document.getElementById('tour-next-btn');
+        const tourEndBtn = document.getElementById('tour-end-btn');
+        const tourProgress = document.getElementById('tour-progress');
+        const startTourBtn = document.getElementById('start-tour-btn');
+
+        const tourSteps = [
+            {
+                title: "Welcome to Tahiti",
+                desc: "The largest island in French Polynesia, shaped like a figure-8. It's the economic, cultural, and political center.",
+                target: 'tahiti',
+                type: 'island'
+            },
+            {
+                title: "Papeete Market",
+                desc: "Immerse yourself in the local culture at the vibrant Marché de Papeete. A perfect place to find crafts and local foods.",
+                target: 1,
+                type: 'attraction'
+            },
+            {
+                title: "Moorea",
+                desc: "Just a short ferry ride away, Moorea rises magically from the ocean like a cathedral. Known for its jagged peaks and bays.",
+                target: 'moorea',
+                type: 'island'
+            },
+            {
+                title: "Belvédère Lookout",
+                desc: "Witness the stunning panorama of Cook's Bay and Ōpūnohu Bay from this ancient volcanic crater viewpoint.",
+                target: 4,
+                type: 'attraction'
+            },
+            {
+                title: "Bora Bora",
+                desc: "The Jewel of the South Seas. Famous for its luxury overwater bungalows and an incredibly vibrant turquoise lagoon.",
+                target: 'boraBora',
+                type: 'island'
+            },
+            {
+                title: "Mount Otemanu",
+                desc: "The iconic peak of Bora Bora. This jagged remnant of an ancient volcano watches over the entire lagoon.",
+                target: 7,
+                type: 'attraction'
+            }
+        ];
+
+        let currentTourStep = -1;
+
+        function startTour() {
+            if (!tourControls) return;
+            currentTourStep = 0;
+            tourControls.classList.remove('hidden');
+            // Ensure visible for accessibility/interaction
+            tourControls.style.display = 'block';
+
+            showTourStep(currentTourStep);
+            // Move focus to the 'Next' button so user can easily proceed
+            setTimeout(() => tourNextBtn.focus(), 100);
+        }
+
+        function endTour() {
+            currentTourStep = -1;
+            tourControls.classList.add('hidden');
+
+            // ACC-FIX: Hide from accessibility tree after transition
+            setTimeout(() => {
+                tourControls.style.display = 'none';
+            }, 300);
+
+            // Return to default view (Tahiti)
+            const tahitiBtn = islandSelector.querySelector('[data-island-key="tahiti"]');
+            if (tahitiBtn) tahitiBtn.click();
+
+            if (startTourBtn) startTourBtn.focus();
+        }
+
+        function showTourStep(index) {
+            const step = tourSteps[index];
+            if (!step) return;
+
+            // Update Text with smooth fade
+            tourTitle.textContent = step.title;
+            tourDesc.textContent = step.desc;
+            tourProgress.textContent = `Step ${index + 1} of ${tourSteps.length}`;
+
+            if (index === tourSteps.length - 1) {
+                tourNextBtn.textContent = "Finish";
+            } else {
+                tourNextBtn.textContent = "Next";
+            }
+
+            // Execute Movement/Action
+            if (step.type === 'island') {
+                const btn = islandSelector.querySelector(`[data-island-key="${step.target}"]`);
+                if (btn) btn.click();
+            } else if (step.type === 'attraction') {
+                const attraction = attractions.find(a => a.id === step.target);
+                if (attraction) {
+                    // Ensure we are on the right island first
+                     const currentIslandBtn = islandSelector.querySelector('.island-btn.active');
+                     if (currentIslandBtn && currentIslandBtn.dataset.islandKey !== attraction.island) {
+                         const correctIslandBtn = islandSelector.querySelector(`[data-island-key="${attraction.island}"]`);
+                         if (correctIslandBtn) correctIslandBtn.click();
+                         // Small delay to allow island switch to settle?
+                         // renderAttractions is sync, but map.flyTo is async.
+                         // However, handleInteraction handles its own flyTo.
+                         // If we click island, it flies to island. Then we click attraction, it flies to attraction.
+                         // This might cause a double flight or race condition.
+                         // But usually the attraction click will override.
+                     }
+                    handleInteraction(step.target);
+                }
+            }
+        }
+
+        if (startTourBtn) {
+            startTourBtn.addEventListener('click', () => {
+                triggerHaptic(10);
+                startTour();
+            });
+        }
+
+        if (tourNextBtn) {
+            tourNextBtn.addEventListener('click', () => {
+                triggerHaptic(10);
+                if (currentTourStep < tourSteps.length - 1) {
+                    currentTourStep++;
+                    showTourStep(currentTourStep);
+                } else {
+                    endTour();
+                }
+            });
+        }
+
+        if (tourEndBtn) {
+            tourEndBtn.addEventListener('click', () => {
+                triggerHaptic(10);
+                endTour();
+            });
+        }
     }
 })();

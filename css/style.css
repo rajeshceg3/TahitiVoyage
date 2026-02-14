@@ -80,3 +80,15 @@ body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(-
     .leaflet-marker-icon.custom-marker::before { animation: none; opacity: 0.3; transform: scale(1); }
     #welcome-overlay, .island-btn, .attraction-card, .skip-link, .leaflet-marker-icon.custom-marker { transition: none; }
 }
+
+/* PALETTE UX: Guided Tour Styles */
+.tour-btn { border: 1px solid var(--sunlit-shallows); border-radius: 4px; padding: 0.25rem 0.75rem; margin-left: 0; background: rgba(100, 255, 218, 0.1); }
+.tour-btn:hover { background: rgba(100, 255, 218, 0.2); }
+#tour-controls { position: absolute; top: 5rem; right: 1.5rem; width: 320px; max-width: 90vw; background: var(--volcanic-glass); border: 1px solid var(--sunlit-shallows); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 500; transition: opacity 0.3s ease, transform 0.3s ease; opacity: 1; transform: translateY(0); }
+@supports (backdrop-filter: blur(10px)) { #tour-controls { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); } }
+#tour-controls.hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+#tour-controls h2 { color: var(--sunlit-shallows); font-size: 1.25rem; margin-top: 0; }
+#tour-controls p { color: var(--pearl); line-height: 1.6; margin-bottom: 1.5rem; }
+.tour-actions { display: flex; justify-content: space-between; }
+.tour-actions .island-btn { border: 1px solid var(--pearl-muted); border-radius: 4px; padding: 0.25rem 0.75rem; }
+.tour-actions .island-btn:hover { border-color: var(--sunlit-shallows); }
