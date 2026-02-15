@@ -39,10 +39,23 @@
 
     <header id="header" class="ui-container" tabindex="-1">
         <h1>An Exploration</h1>
-        <nav id="island-selector" aria-label="Choose island"></nav>
+        <nav id="island-selector" aria-label="Choose island">
+            <button id="start-tour-btn" class="island-btn tour-btn" aria-label="Start Guided Tour">Start Tour</button>
+        </nav>
     </header>
 
     <main id="main-content">
+        <!-- PALETTE UX: Guided Tour Controls -->
+        <div id="tour-controls" class="ui-container hidden" role="dialog" aria-modal="true" aria-label="Guided Tour Controls" aria-live="polite">
+            <h2 id="tour-title">Tour Title</h2>
+            <p id="tour-desc">Tour Description</p>
+            <div class="tour-actions">
+                <button id="tour-next-btn" class="island-btn">Next</button>
+                <button id="tour-end-btn" class="island-btn">End Tour</button>
+            </div>
+            <div id="tour-progress" class="sr-only">Step 1 of 6</div>
+        </div>
+
         <div id="attraction-dock-wrapper" class="ui-container">
             <!-- PALETTE UX: Added aria-label for accessibility -->
             <div id="attraction-dock" aria-label="Attractions list"></div>
