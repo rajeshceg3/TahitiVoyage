@@ -66,7 +66,7 @@
 
                 // PALETTE UX: Restore focus to logical starting point after overlay closes (ACC-004)
                 // Focusing the active island button is more useful than the header container
-                const activeIsland = document.querySelector('.island-btn[aria-current="true"]');
+                const activeIsland = document.getElementById('voyage-toggle');
                 if (activeIsland) {
                     activeIsland.focus();
                 } else {
@@ -90,7 +90,7 @@
             autoDismissTimer = setTimeout(hideOverlay, 8000); // Extended to prevent race conditions in tests/usage
         }
 
-        const map = L.map('map', { zoomControl: true, attributionControl: false }).setView(islands.tahiti.coords, islands.tahiti.zoom);
+        const map = L.map('map', { zoomControl: true, attributionControl: true }).setView(islands.tahiti.coords, islands.tahiti.zoom);
         const tileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
@@ -106,6 +106,67 @@
         const dock = document.getElementById('attraction-dock');
         const islandSelector = document.getElementById('island-selector');
         const mapAnnouncer = document.getElementById('map-announcer');
+        const voyagePanel = document.getElementById('voyage-panel');
+        const voyageToggle = document.getElementById('voyage-toggle');
+        const placeSheet = document.getElementById('place-sheet');
+        let selectedIsland = 'tahiti';
+        let selectedPlace = null;
+        function showVoyage(open, returnFocus = true) {
+            voyagePanel.hidden = !open;
+            voyagePanel.inert = !open;
+            voyageToggle.setAttribute('aria-expanded', String(open));
+            document.getElementById('map').inert = open;
+            if (open) {
+                closePlace(false);
+                document.getElementById('voyage-close').focus();
+            } else if (returnFocus) voyageToggle.focus();
+        }
+        function closePlace(returnFocus = true) {
+            placeSheet.hidden = true;
+            placeSheet.inert = true;
+            if (returnFocus) voyageToggle.focus();
+        }
+        function showPlace(attraction) {
+            const alreadyOpen = !placeSheet.hidden;
+            selectedPlace = attraction;
+            document.getElementById('place-title').textContent = attraction.name;
+            document.getElementById('place-island').textContent = islands[attraction.island].name;
+            document.getElementById('place-description').textContent = attraction.description;
+            const group = attractions.filter(a => a.island === attraction.island);
+            document.getElementById('place-count').textContent = `${group.indexOf(attraction) + 1} / ${group.length}`;
+            showVoyage(false, false);
+            placeSheet.hidden = false;
+            placeSheet.inert = false;
+            placeSheet.scrollTop = 0;
+            if (!alreadyOpen) document.getElementById('place-close').focus();
+        }
+        voyageToggle.addEventListener('click', () => {
+            if (currentTourStep >= 0) endTour();
+            showVoyage(voyagePanel.hidden);
+        });
+        document.getElementById('voyage-close').addEventListener('click', () => showVoyage(false));
+        document.getElementById('place-close').addEventListener('click', () => closePlace());
+        for (const [id, direction] of [['place-prev', -1], ['place-next', 1]]) {
+            document.getElementById(id).addEventListener('click', () => {
+                const group = attractions.filter(a => a.island === selectedIsland);
+                const next = (group.indexOf(selectedPlace) + direction + group.length) % group.length;
+                handleInteraction(group[next].id);
+            });
+        }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                if (!voyagePanel.hidden) showVoyage(false);
+                else if (currentTourStep >= 0) endTour();
+                else if (!placeSheet.hidden) closePlace();
+            }
+            if (e.key === 'Tab' && !voyagePanel.hidden) {
+                const controls = [...voyagePanel.querySelectorAll('button:not([disabled])')].filter(b => b.tabIndex >= 0);
+                const first = controls[0], last = controls[controls.length - 1];
+                if (e.shiftKey && document.activeElement === first) {e.preventDefault();last.focus();}
+                else if (!e.shiftKey && document.activeElement === last) {e.preventDefault();first.focus();}
+            }
+        });
+
 
         function announceMapUpdate(name) {
             if (mapAnnouncer) mapAnnouncer.textContent = `Map view updated to ${name}.`;
@@ -215,6 +276,7 @@
             announceMapUpdate(attraction.name);
 
             updateActiveStates(id);
+            if (currentTourStep < 0) showPlace(attraction);
         }
 
         function updateActiveStates(activeId) {
@@ -292,6 +354,8 @@
                 const island = islands[islandKey];
 
                 if (island) {
+                    selectedIsland = islandKey;
+                    closePlace(false);
                     // Update active state
                     document.querySelectorAll('.island-btn').forEach(b => {
                         const isActive = b === btn;
@@ -365,6 +429,10 @@
 
         function startTour() {
             if (!tourControls) return;
+            showVoyage(false, false);
+            closePlace(false);
+            tourControls.hidden = false;
+            tourControls.inert = false;
             currentTourStep = 0;
             tourControls.classList.remove('hidden');
             // Ensure visible for accessibility/interaction
@@ -378,17 +446,14 @@
         function endTour() {
             currentTourStep = -1;
             tourControls.classList.add('hidden');
-
-            // ACC-FIX: Hide from accessibility tree after transition
-            setTimeout(() => {
-                tourControls.style.display = 'none';
-            }, 300);
+            tourControls.hidden = true;
+            tourControls.inert = true;
 
             // Return to default view (Tahiti)
             const tahitiBtn = islandSelector.querySelector('[data-island-key="tahiti"]');
             if (tahitiBtn) tahitiBtn.click();
 
-            if (startTourBtn) startTourBtn.focus();
+            voyageToggle.focus();
         }
 
         function showTourStep(index) {
