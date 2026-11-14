@@ -4,3 +4,4 @@ package.json
 tests/
 test-results/
 playwright-report/
+verification/*.png

@@ -92,3 +92,48 @@ body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(-
 .tour-actions { display: flex; justify-content: space-between; }
 .tour-actions .island-btn { border: 1px solid var(--pearl-muted); border-radius: 4px; padding: 0.25rem 0.75rem; }
 .tour-actions .island-btn:hover { border-color: var(--sunlit-shallows); }
+
+/* Voyage: one explicit entry, with the satellite view left clear. */
+[hidden] { display: none !important; }
+#header { padding: 16px 20px; flex-direction: row; align-items: center; gap: 12px; }
+#header h1 { font-size: clamp(1.05rem, 4vw, 1.4rem); text-shadow: 0 2px 12px #001221; }
+.island-btn { min-height: 44px; padding: 10px 12px; }
+.voyage-toggle { padding: 10px 15px; border: 1px solid rgba(100,255,218,.45); border-radius: 30px; background: #102b3b; color: var(--sunlit-shallows); white-space: nowrap; }
+.voyage-toggle span { margin-left: 6px; }
+#voyage-panel, #place-sheet { position: absolute; z-index: 600; background: rgba(10,30,45,.98); border: 1px solid #37636b; box-shadow: 0 12px 50px #00101c88; border-radius: 20px; padding: 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #64ffda #102b3b; }
+#voyage-panel { top: 80px; right: 20px; width: min(410px, calc(100% - 40px)); max-height: calc(100dvh - 122px); }
+.sheet-heading { display: flex; align-items: flex-start; gap: 12px; justify-content: space-between; margin-bottom: 18px; }
+.sheet-heading h2 { font-size: 1.35rem; line-height: 1.3; font-weight: 500; margin: 0; color: var(--pearl); }
+.eyebrow { font-size: .72rem; color: var(--sunlit-shallows); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
+.close-sheet { flex: 0 0 44px; min-width: 44px; height: 44px; border: 1px solid #42606d; background: #112f40; color: var(--pearl); border-radius: 50%; font-size: 25px; cursor: pointer; }
+#island-selector { display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 14px; border-bottom: 1px solid #2d4956; margin-bottom: 16px; }
+#start-tour-btn { width: 100%; margin-bottom: 16px; }
+#attraction-dock { display: grid; gap: 10px; padding: 0; overflow: visible; scroll-snap-type: none; }
+.attraction-card { width: 100%; min-width: 0; padding: 16px; border-radius: 12px; background: #153342; animation: none; transform: none !important; box-shadow: none !important; transition: border-color .18s; }
+.attraction-card .card-title { font-size: 1rem; margin: 0; line-height: 1.45; }
+.attraction-card .card-desc { display: none; }
+#place-sheet { bottom: 42px; right: 20px; width: min(410px, calc(100% - 40px)); max-height: 44dvh; }
+#place-description { margin: 0; font-size: .95rem; line-height: 1.75; color: #c0ceda; }
+.place-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 14px; margin-top: 16px; border-top: 1px solid #2d4956; }
+#place-count { font-size: .8rem; color: #a5bcc7; }
+#tour-controls { top: auto; bottom: 34px; right: 20px; width: min(410px, calc(100% - 40px)); max-width: none; max-height: 52dvh; overflow: auto; background: rgba(10,30,45,.98); padding: 20px; border-radius: 20px; transition: none; }
+#tour-controls.hidden { visibility: hidden; }
+#tour-controls p { line-height: 1.65; }
+#tour-progress { position: static; width: auto; height: auto; margin: 16px 0 0; overflow: visible; clip: auto; color: #a5bcc7; font-size: .8rem; }
+.leaflet-top.leaflet-left { top: 80px; }
+.leaflet-control-zoom { box-shadow: none !important; border: 1px solid #42606d !important; border-radius: 24px !important; overflow: hidden; }
+.leaflet-control-zoom a { width: 44px !important; height: 44px !important; line-height: 44px !important; background: #102b3b !important; color: var(--pearl) !important; border-color: #42606d !important; }
+.leaflet-control-attribution { font-size: 9px !important; line-height: 1.3 !important; max-width: 100vw; background: rgba(10,30,45,.94) !important; color: #c0ceda; padding: 3px 6px !important; }
+.leaflet-control-attribution a { color: var(--sunlit-shallows); }
+button:focus-visible, .leaflet-control a:focus-visible { outline: 2px solid var(--sunlit-shallows); outline-offset: 3px; }
+@media (max-width: 600px) {
+ #header { padding: 12px; }
+ #voyage-panel { top: 72px; right: 12px; width: calc(100% - 24px); max-height: calc(100dvh - 110px); }
+ #place-sheet, #tour-controls { right: 12px; width: calc(100% - 24px); max-height: 44dvh; bottom: 42px; }
+ .leaflet-top.leaflet-left { top: 72px; }
+}
+
+#place-sheet .sheet-heading, #voyage-panel .sheet-heading { position: sticky; top: -20px; z-index: 2; background: #0a1e2d; margin-top: -20px; padding-top: 20px; padding-bottom: 10px; }
+#place-sheet .place-actions { position: sticky; bottom: -20px; background: #0a1e2d; margin-bottom: -20px; padding-bottom: 16px; }
+/* Extend the existing 16px marker's hit area without changing its dot or pulse. */
+.custom-marker::after { content: ''; position: absolute; width: 44px; height: 44px; top: -14px; left: -14px; border-radius: 50%; }
